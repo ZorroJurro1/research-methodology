@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+src/pubfig/__init__.py
+src/pubfig/core.py
+src/pubfig_research_prototype.egg-info/PKG-INFO
+src/pubfig_research_prototype.egg-info/SOURCES.txt
+src/pubfig_research_prototype.egg-info/dependency_links.txt
+src/pubfig_research_prototype.egg-info/requires.txt
+src/pubfig_research_prototype.egg-info/top_level.txt
+tests/test_core.py

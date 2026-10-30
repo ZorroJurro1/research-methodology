@@ -1,0 +1,81 @@
+# PubFig — Phase 1 prototype
+
+PubFig is a Python research prototype for producing consistent scientific figures and running basic technical preflight checks before export. It currently supports line, bar, scatter and heatmap charts and exports PNG, PDF and SVG.
+
+> **Scope note:** This is not an official IEEE or ACM compliance checker. Venue-specific dimensions, fonts, file requirements, accessibility expectations and policies must be checked against the exact target venue. The demo data are synthetic and are not empirical research results.
+
+## Architecture
+
+- `src/pubfig/core.py`: configuration, style, chart API, validation and export functions.
+- `src/pubfig/__init__.py`: public package API and version.
+- `tests/`: automated tests for chart creation, input validation, export formats and raster DPI metadata.
+- `examples/create_demo.py`: deterministic synthetic examples for all four chart types.
+- `webapp/app.py`: optional Streamlit interface for CSV upload, chart preview and downloads.
+- `artifacts/`: generated demo outputs.
+
+## Install locally
+
+Python 3.10+ is required. From this directory:
+
+```bash
+python -m venv .venv
+# Windows PowerShell: .venv\\Scripts\\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev,demo]'
+```
+
+If you only need the package and tests, install `-e '.[dev]'`. For a quick import without installation, set `PYTHONPATH=src` (PowerShell: `$env:PYTHONPATH='src'`).
+
+## Run tests and demo
+
+```bash
+python -m pytest -q
+python examples/create_demo.py
+```
+
+## Run the interactive demo
+
+```bash
+streamlit run webapp/app.py
+```
+
+The app runs locally by default. To host it publicly, deploy this repository to a service that supports Streamlit (for example, Streamlit Community Cloud) and configure the repository path and dependencies. **Public deployment has not been performed by this code-generation step.** Do not upload confidential datasets to a hosted instance unless its privacy and retention arrangements have been reviewed.
+
+## API quick start
+
+```python
+import pandas as pd
+from pubfig import line_plot, save_publication_figure
+
+data = pd.DataFrame({'epoch': [1, 2, 3], 'score': [0.61, 0.73, 0.82]})
+fig, ax = line_plot(data, 'epoch', 'score', title='Model score', ylabel='Score')
+result = save_publication_figure(fig, 'model_score', 'figures', dpi=600)
+print(result)
+```
+
+`save_publication_figure` returns file paths, vector formats, export DPI and preflight warnings. PNG is raster; PDF and SVG are vector containers for the plotted elements, although embedded raster content remains raster.
+
+## Current limitations / next work
+
+- Accessibility checks are preliminary: no automated color-vision simulation, grayscale contrast analysis, font-size measurement after layout, or alt-text validation yet.
+- Current API supports single-series bars; grouped/stacked bars and multi-series convenience interfaces are not included.
+- The preflight checks do not guarantee compliance with any venue.
+- Streamlit is an optional dependency and the app has not been publicly deployed.
+- No benchmark or user study has been performed yet. Do not claim performance, readability or accessibility superiority without evidence.
+
+## Avoiding unreadable charts
+- Use **Scatter** for independent transaction-level observations. Scatter plots show separate points and never connect them.
+- For **Line**, choose an ordered/time variable and aggregate repeated X values (mean, sum, median, or count). Do not connect arbitrary transaction rows.
+- For **Bar**, aggregate values by category (sum, mean, median, or count).
+- For **Heatmap**, use the recommended correlation matrix for many numeric variables. Raw-value heatmaps are capped to a manageable number of rows and standardized for comparison.
+- The app warns about some high-cardinality or high-density cases, but these are heuristics—not a guarantee that a chart is statistically appropriate.
+
+
+## Dashboard expansion (v0.2.0)
+
+The dashboard offers Line, Area, Bar, Scatter, Histogram, Box plot, Violin plot, Heatmap, and ECDF. It includes dataset preview and quality checks, visual/export settings, and separate preview/export/preflight tabs. See `CHANGELOG.md` and `DEPLOYMENT.md`.
+
+
+### Intelligent chart recommendations (v0.3.0)
+The dashboard includes a rule-based recommendation tab that suggests chart types from column types, cardinality, and numeric measures, explains each suggestion, and renders previews. Recommendations are heuristics and should be reviewed in the context of the analysis; their scores are not probabilities or validated expert judgments.
